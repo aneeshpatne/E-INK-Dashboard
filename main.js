@@ -1,10 +1,20 @@
 const helper = require("./helper");
 const kindle = require("./connect");
 
-function getTimeString() {
+const CLEAN_INTERVAL_MS = 15 * 60 * 1000;
+const UPDATE_INTERVAL_MS = 60 * 1000;
+
+let lastBacklightLevel = null;
+let isShuttingDown = false;
+
+function getIstDate() {
   const now = new Date();
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  const ist = new Date(utc + 5.5 * 60 * 60 * 1000);
+  return new Date(utc + 5.5 * 60 * 60 * 1000);
+}
+
+function getTimeString() {
+  const ist = getIstDate();
   const h = ist.getHours();
   const h12 = ((h + 11) % 12) + 1;
   const m = ist.getMinutes().toString().padStart(2, "0");
@@ -20,25 +30,66 @@ async function updateTime() {
   }
 }
 
+async function cleanupDisplayRegion() {
+  try {
+    await helper.refreshRegion();
+  } catch (e) {
+    console.error("Cleanup failed:", e.message || e);
+  }
+}
+
+async function adjustBacklight() {
+  try {
+    const ist = getIstDate();
+    const hour = ist.getHours();
+    const isDaytime = hour >= 7 && hour < 23;
+    const targetLevel = isDaytime ? 20 : 0;
+    if (targetLevel !== lastBacklightLevel) {
+      await helper.setBacklight(targetLevel);
+      lastBacklightLevel = targetLevel;
+    }
+  } catch (e) {
+    console.error("Backlight adjustment failed:", e.message || e);
+  }
+}
+
 function msUntilNextMinute() {
   const now = Date.now();
-  return 60000 - (now % 60000);
+  return UPDATE_INTERVAL_MS - (now % UPDATE_INTERVAL_MS);
+}
+
+async function runClockUpdate() {
+  await updateTime();
+  await adjustBacklight();
 }
 
 (async () => {
   await kindle.connect();
-  await updateTime();
+  await kindle.exec("/mnt/us/usbnet/bin/fbink -q -c -f -W GC16");
+  await cleanupDisplayRegion();
+  await runClockUpdate();
   setTimeout(() => {
-    updateTime();
-    setInterval(updateTime, 60000);
+    runClockUpdate();
+    setInterval(runClockUpdate, UPDATE_INTERVAL_MS);
   }, msUntilNextMinute());
+  setInterval(cleanupDisplayRegion, CLEAN_INTERVAL_MS);
 })();
 
 function shutdown() {
-  try {
-    kindle.close();
-  } catch (_) {}
-  process.exit(0);
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  helper
+    .setBacklight(0)
+    .catch((e) => {
+      console.error("Failed to dim backlight on shutdown:", e.message || e);
+    })
+    .finally(() => {
+      try {
+        kindle.close();
+      } catch (_) {}
+      process.exit(0);
+    });
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

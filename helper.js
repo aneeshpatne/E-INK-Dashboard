@@ -11,4 +11,16 @@ async function clearTime() {
   );
 }
 
-module.exports = { setTime, clearTime };
+async function refreshRegion() {
+  await kindle.exec(
+    "/mnt/us/usbnet/bin/fbink -q -k top=0,left=350,width=750,height=375 -B WHITE -f -W GC16"
+  );
+}
+
+async function setBacklight(level) {
+  await kindle.exec(
+    `lipc-set-prop com.lab126.powerd flIntensity ${Number(level)}`
+  );
+}
+
+module.exports = { setTime, clearTime, refreshRegion, setBacklight };
