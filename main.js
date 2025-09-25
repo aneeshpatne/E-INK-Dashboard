@@ -2,8 +2,10 @@ const kindle = require("./connect");
 (async () => {
   await kindle.connect();
   console.log("Connected!");
-
   await kindle.exec(
-    '/mnt/us/usbnet/bin/fbink -q -m -M -S 6 "Hello from main.js"'
+    "/mnt/us/usbnet/bin/fbink -s top=0,left=491,width=466,height=375 -W DU"
+  );
+  await kindle.exec(
+    '/mnt/us/usbnet/bin/fbink -q -m -y -3 -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,size=90 "12:40"'
   );
 })();
