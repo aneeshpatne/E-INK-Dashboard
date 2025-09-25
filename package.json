@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/aneeshpatne/Clock#readme",
   "dependencies": {
+    "puppeteer": "^24.22.3",
     "ssh2": "^1.17.0"
   }
 }
