@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Kindle Dashboard</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      .wrap {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .time {
+        font-size: 180px;
+        font-weight: bold;
+      }
+      .info {
+        font-size: 42px;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="time" id="time"></div>
+      <div class="info">Hello Aneesh 👋</div>
+    </div>
+    <script>
+      const pad = (n) => String(n).padStart(2, "0");
+      const d = new Date();
+      document.getElementById("time").textContent =
+        pad(d.getHours()) + ":" + pad(d.getMinutes());
+    </script>
+  </body>
+</html>

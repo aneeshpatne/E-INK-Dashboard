@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/aneeshpatne/Clock/issues"
   },
-  "homepage": "https://github.com/aneeshpatne/Clock#readme"
+  "homepage": "https://github.com/aneeshpatne/Clock#readme",
+  "dependencies": {
+    "ssh2": "^1.17.0"
+  }
 }
