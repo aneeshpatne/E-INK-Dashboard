@@ -14,6 +14,9 @@ const RECONNECT_POLL_INTERVAL_MS = 5 * 1000;
 let mode = "legacy"; // "browser" | "legacy"
 let legacyClock = null;
 let isShuttingDown = false;
+let screenIntervalId = null;
+let screenAlignTimeout = null;
+let isScreenActive = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -56,15 +59,143 @@ async function main() {
   await kindle.connect();
   console.log("[main] Forcing legacy mode (time check removed)");
   mode = "legacy";
+  // Ensure browser (default) is up at 7:00 daily. If currently within active hours, start it now.
   try {
-    await startLegacyClock();
+    const now = getIstDate();
+    if (isWithinHours(now, ACTIVE_START_HOUR, ACTIVE_END_HOUR)) {
+      console.log("[main] Within active hours — ensuring browser is started");
+      try {
+        await kindle.connect();
+      } catch (_) {}
+      try {
+        await browserMode.start();
+        mode = "browser";
+      } catch (e) {
+        console.error(
+          "[main] browser start failed:",
+          e && e.message ? e.message : e
+        );
+      }
+    } else {
+      // schedule browser boot at next 7:00
+      console.log(
+        "[main] Not active hours — browser will be started at 07:00 IST"
+      );
+    }
+
+    // Schedule daily browser start at 07:00 IST and sleep at 23:00 IST
+    scheduleDailyAt(ACTIVE_START_HOUR, 0, async () => {
+      console.log("[schedule] 07:00 triggered — starting browser");
+      try {
+        await kindle.connect();
+      } catch (_) {}
+      try {
+        await browserMode.start();
+        mode = "browser";
+      } catch (e) {
+        console.error(
+          "[schedule] browser start failed:",
+          e && e.message ? e.message : e
+        );
+      }
+    });
+
+    scheduleDailyAt(ACTIVE_END_HOUR, 0, async () => {
+      console.log("[schedule] 23:00 triggered — shutting down UI");
+      try {
+        await kindle.connect();
+      } catch (_) {}
+      try {
+        await browserMode.shutdown();
+        mode = "legacy";
+      } catch (e) {
+        console.error(
+          "[schedule] browser shutdown failed:",
+          e && e.message ? e.message : e
+        );
+      }
+    });
+
+    // Schedule screen activations every 15 minutes aligned to quarter-hours
+    scheduleScreenLoop();
+
+    // Also immediately start a single screen activation on startup if desired
+    // (commented out) await startLegacyClock();
   } catch (e) {
-    console.error(
-      "[main] startLegacyClock failed:",
-      e && e.message ? e.message : e
-    );
+    console.error("[main] startup failed:", e && e.message ? e.message : e);
     await shutdown();
   }
+}
+
+function msUntilNextQuarter() {
+  const now = getIstDate();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ms = now.getMilliseconds();
+  const nextQuarter =
+    Math.ceil((minutes * 60 + seconds + ms / 1000) / (15 * 60)) * (15 * 60);
+  const targetSeconds = nextQuarter; // seconds since start of hour
+  const targetMinutes = Math.floor(targetSeconds / 60);
+  const targetSecs = Math.floor(targetSeconds % 60);
+  const next = new Date(now.getTime());
+  next.setMinutes(targetMinutes, targetSecs, 0);
+  if (next.getTime() <= now.getTime()) next.setMinutes(next.getMinutes() + 15);
+  return next.getTime() - now.getTime();
+}
+
+function scheduleScreenLoop() {
+  const align = msUntilNextQuarter();
+  console.log(
+    `[schedule] Screen loop aligning in ${Math.round(align / 1000)}s`
+  );
+  screenAlignTimeout = setTimeout(() => {
+    activateScreenOnce().catch((e) =>
+      console.error("[schedule] initial screen activation failed:", e)
+    );
+    screenIntervalId = setInterval(() => {
+      activateScreenOnce().catch((e) =>
+        console.error("[schedule] screen activation failed:", e)
+      );
+    }, 15 * 60 * 1000);
+  }, align);
+}
+
+async function activateScreenOnce() {
+  if (isScreenActive) return;
+  isScreenActive = true;
+  let screen = null;
+  try {
+    console.log("[screen-schedule] Activating screen mode");
+    screen = createLegacyClockScreen({ helper, kindle });
+    await screen.start();
+    // keep it active for 1 minute
+    await delay(60 * 1000);
+    await screen.shutdown();
+    console.log("[screen-schedule] Deactivated screen mode");
+  } catch (e) {
+    console.error(
+      "[screen-schedule] screen activation error:",
+      e && e.message ? e.message : e
+    );
+    try {
+      if (screen) await screen.shutdown();
+    } catch (_) {}
+  } finally {
+    isScreenActive = false;
+  }
+}
+
+function scheduleDailyAt(hour, minute, fn) {
+  const now = getIstDate();
+  const target = new Date(now.getTime());
+  target.setHours(hour, minute, 0, 0);
+  if (target.getTime() <= now.getTime()) target.setDate(target.getDate() + 1);
+  const ms = target.getTime() - now.getTime();
+  setTimeout(() => {
+    fn();
+    // schedule next day
+    setInterval(fn, 24 * 60 * 60 * 1000);
+  }, ms);
 }
 
 async function shutdown() {

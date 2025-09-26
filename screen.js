@@ -34,14 +34,22 @@ function createLegacyClockScreen({ helper, kindle }) {
       if (!alertJson || !alertJson.value || !alertJson.value.message) {
         throw new Error("Invalid alert payload");
       }
-      const msg = String(alertJson.value.message || "").replace(/\"/g, '\\"');
-      const color = (alertJson.value.color || "").toLowerCase();
+      const rawMsg = String(alertJson.value.message || "");
+      const msg = rawMsg.replace(/"/g, '\\"');
+      const rawColor = String(alertJson.value.color || "");
+      const colorLabel = rawColor.toUpperCase();
 
-      console.log("[screen] Painting alert, color:", color);
+      console.log("[screen] Painting alert, color:", rawColor);
 
-      // Render the message using fbink text rendering. Use a modest font size so long messages fit.
-      const fbinkCmd = `/mnt/us/usbnet/bin/fbink -q -m -y 0 -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,size=36,padding=HORIZONTAL "${msg}"`;
-      await kindle.exec(fbinkCmd);
+      const colorCmd = `/mnt/us/usbnet/bin/fbink -q -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,px=300,top=0,left=0,right=0,bottom=0 -m "${colorLabel} ALERT"`;
+      const messageCmd = `/mnt/us/usbnet/bin/fbink -q -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,px=150,top=300,left=0,right=0,bottom=0 -m "${msg}"`;
+
+      await kindle.exec(colorCmd);
+      // small pause to ensure Kindle processes first region before drawing next one
+      await new Promise((r) => setTimeout(r, 250));
+      await kindle.exec(messageCmd);
+
+      // Regional refresh removed per request
     } catch (e) {
       console.error("Failed to paint alert:", e.message || e);
       throw e;
@@ -67,11 +75,11 @@ function createLegacyClockScreen({ helper, kindle }) {
     if (!isRunning || isShuttingDown) return;
     isShuttingDown = true;
 
-    try {
-      await helper.setBacklight(0);
-    } catch (e) {
-      console.error("Failed to dim backlight on shutdown:", e.message || e);
-    }
+    // try {
+    //   await helper.setBacklight(0);
+    // } catch (e) {
+    //   console.error("Failed to dim backlight on shutdown:", e.message || e);
+    // }
 
     try {
       await helper.setRotation(3);
