@@ -29,7 +29,7 @@ async function setRotation(rotation) {
   );
 }
 async function startKindle() {
-  await kindle.exec("start lab126_gui");
+  await kindle.exec("reboot");
 }
 async function endKindle() {
   await kindle.exec("stop lab126_gui");
@@ -47,6 +47,12 @@ async function startBrowser(url) {
 async function endBrowser() {
   await kindle.exec("killall mesquite");
 }
+async function blackDisplay() {
+  await kindle.exec("fbink -q -k -B BLACK");
+}
+async function refreshFramework() {
+  await kindle.exec("restart framework");
+}
 module.exports = {
   setTime,
   clearTime,
@@ -57,4 +63,6 @@ module.exports = {
   startBrowser,
   endKindle,
   endBrowser,
+  blackDisplay,
+  refreshFramework,
 };
