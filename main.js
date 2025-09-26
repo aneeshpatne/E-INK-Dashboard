@@ -2,6 +2,7 @@ const helper = require("./helper");
 const kindle = require("./connect");
 const { getIstDate, isWithinHours } = require("./time");
 const { createLegacyClockScreen } = require("./screen");
+const browserMode = require("./browser");
 
 const ACTIVE_START_HOUR = 7;
 const ACTIVE_END_HOUR = 23;
@@ -41,48 +42,9 @@ async function waitForKindleReconnect() {
 }
 
 async function startup() {
-  console.log("[startup] Initiating Kindle UI launch");
-  // try {
-  //   await helper.startKindle();
-  //   console.log("[startup] Kindle UI launch command sent");
-  // } catch (e) {
-  //   console.error("Failed to start Kindle UI:", e.message || e);
-  // }
-
-  // console.log("[startup] Closing SSH session to allow Kindle UI boot");
-  // try {
-  //   kindle.close();
-  // } catch (e) {
-  //   console.error("[startup] Failed to close SSH session:", e.message || e);
-  // }
-
-  // await waitForKindleReconnect();
-
-  // console.log(
-  //   `[startup] Waiting ${
-  //     BROWSER_LAUNCH_DELAY_MS / 1000
-  //   }s before starting browser`
-  // );
-  // await delay(BROWSER_LAUNCH_DELAY_MS);
-
-  // console.log(`[startup] Launching browser at ${BROWSER_URL}`);
-  // try {
-  //   await helper.startBrowser(BROWSER_URL);
-  //   console.log("[startup] Browser launch command sent");
-  // } catch (e) {
-  //   console.error("Failed to launch browser:", e.message || e);
-  // }
-
-  // console.log("[startup] Waiting 5s before setting backlight");
-  // await delay(5 * 1000);
-
-  // console.log("[startup] Setting backlight to level 10");
-  // try {
-  //   await helper.setBacklight(10);
-  //   console.log("[startup] Backlight adjustment request sent");
-  // } catch (e) {
-  //   console.error("Failed to set daytime backlight:", e.message || e);
-  // }
+  // delegate browser-mode startup to browser.js
+  console.log("[startup] Delegating to browser mode startup");
+  await browserMode.start();
 }
 
 async function startLegacyClock() {
@@ -97,7 +59,10 @@ async function main() {
   try {
     await startLegacyClock();
   } catch (e) {
-    console.error("[main] startLegacyClock failed:", e && e.message ? e.message : e);
+    console.error(
+      "[main] startLegacyClock failed:",
+      e && e.message ? e.message : e
+    );
     await shutdown();
   }
 }
