@@ -31,10 +31,21 @@ async function setRotation(rotation) {
 async function startKindle() {
   await kindle.exec("start lab126_gui");
 }
+async function endKindle() {
+  await kindle.exec("stop lab126_gui");
+}
 async function startBrowser(url) {
+  const normalizedUrl =
+    url.startsWith("http://") || url.startsWith("https://")
+      ? url
+      : `http://${url}`;
+  const encodedUrl = encodeURIComponent(normalizedUrl);
   await kindle.exec(
-    `lipc-set-prop com.lab126.appmgrd start app://com.lab126.browser?${url}`
+    `lipc-set-prop com.lab126.appmgrd start app://com.lab126.browser?${encodedUrl}`
   );
+}
+async function endBrowser() {
+  await kindle.exec("killall mesquite");
 }
 module.exports = {
   setTime,
@@ -44,4 +55,6 @@ module.exports = {
   setRotation,
   startKindle,
   startBrowser,
+  endKindle,
+  endBrowser,
 };
