@@ -65,6 +65,11 @@ async function runClockUpdate() {
 
 (async () => {
   await kindle.connect();
+  try {
+    await helper.setRotation(0);
+  } catch (e) {
+    console.error("Failed to set rotation on startup:", e.message || e);
+  }
   await kindle.exec("/mnt/us/usbnet/bin/fbink -q -c -f -W GC16");
   await cleanupDisplayRegion();
   await runClockUpdate();
@@ -75,21 +80,32 @@ async function runClockUpdate() {
   setInterval(cleanupDisplayRegion, CLEAN_INTERVAL_MS);
 })();
 
-function shutdown() {
+async function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  helper
-    .setBacklight(0)
-    .catch((e) => {
-      console.error("Failed to dim backlight on shutdown:", e.message || e);
-    })
-    .finally(() => {
-      try {
-        kindle.close();
-      } catch (_) {}
-      process.exit(0);
-    });
+  try {
+    await helper.setBacklight(0);
+  } catch (e) {
+    console.error("Failed to dim backlight on shutdown:", e.message || e);
+  }
+
+  try {
+    await helper.setRotation(3);
+  } catch (e) {
+    console.error("Failed to set rotation on shutdown:", e.message || e);
+  }
+
+  try {
+    await kindle.exec("/mnt/us/usbnet/bin/fbink -q -k -B WHITE -f -W GC16");
+  } catch (e) {
+    console.error("Failed to run final fbink refresh:", e.message || e);
+  }
+
+  try {
+    kindle.close();
+  } catch (_) {}
+  process.exit(0);
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

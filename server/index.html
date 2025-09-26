@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Kindle Landscape Clock</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+
+    <style>
+      /* Base: full-screen white, black text, no fancy features */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #000;
+        font-family: sans-serif;
+        height: 100%;
+        width: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* We’ll rotate the inner canvas 90deg so it reads correctly
+       when the device is held with the USB port on the RIGHT. */
+      .rotor {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(90deg);
+        -webkit-transform: translate(-50%, -50%) rotate(90deg); /* old WebKit */
+        transform-origin: center center;
+        -webkit-transform-origin: center center;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .time {
+        font-size: 120px;
+        line-height: 1;
+        letter-spacing: 1px;
+      }
+      .date {
+        margin-top: 10px;
+        font-size: 28px;
+        opacity: 0.85;
+      }
+
+      /* Simple “frame” guides (optional) */
+      .frame {
+        position: fixed;
+        inset: 0;
+        border: 0 solid #000; /* set to 1px if you want a border */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame"></div>
+
+    <!-- Rotated content so it’s horizontal with USB on the RIGHT -->
+    <div class="rotor">
+      <div id="time" class="time">--:--</div>
+      <div id="date" class="date">----------</div>
+    </div>
+
+    <script>
+      // Small ES5 helpers for old Kindle WebKit
+      function pad(n) {
+        return (n < 10 ? "0" : "") + n;
+      }
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function updateClock() {
+        var d = new Date();
+        $("time").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+        $("date").textContent =
+          d.getFullYear() +
+          "-" +
+          pad(d.getMonth() + 1) +
+          "-" +
+          pad(d.getDate());
+      }
+
+      // First paint + gentle cadence for e-ink
+      updateClock();
+      setInterval(updateClock, 30000); // 30s is a good balance on e-ink
+    </script>
+  </body>
+</html>

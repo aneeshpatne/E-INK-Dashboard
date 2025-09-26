@@ -23,4 +23,25 @@ async function setBacklight(level) {
   );
 }
 
-module.exports = { setTime, clearTime, refreshRegion, setBacklight };
+async function setRotation(rotation) {
+  await kindle.exec(
+    `echo ${Number(rotation)} > /sys/class/graphics/fb0/rotate`
+  );
+}
+async function startKindle() {
+  await kindle.exec("start lab126_gui");
+}
+async function startBrowser(url) {
+  await kindle.exec(
+    `lipc-set-prop com.lab126.appmgrd start app://com.lab126.browser?${url}`
+  );
+}
+module.exports = {
+  setTime,
+  clearTime,
+  refreshRegion,
+  setBacklight,
+  setRotation,
+  startKindle,
+  startBrowser,
+};
