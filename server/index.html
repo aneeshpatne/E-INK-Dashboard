@@ -9,6 +9,12 @@
     />
 
     <style>
+      @font-face {
+        font-family: "InstrumentSerif";
+        src: url("InstrumentSerif-Italic.ttf") format("truetype");
+        font-weight: normal;
+        font-style: italic;
+      }
       /* Base: full-screen white, black text, no fancy features */
       html,
       body {
@@ -16,7 +22,7 @@
         padding: 0;
         background: #fff;
         color: #000;
-        font-family: sans-serif;
+        font-family: "InstrumentSerif", serif;
         height: 100%;
         width: 100%;
         -webkit-text-size-adjust: 100%;
@@ -26,25 +32,110 @@
        when the device is held with the USB port on the RIGHT. */
       .rotor {
         position: absolute;
-        top: 50%;
+        top: 65%;
         left: 50%;
         transform: translate(-50%, -50%) rotate(90deg);
         -webkit-transform: translate(-50%, -50%) rotate(90deg); /* old WebKit */
         transform-origin: center center;
         -webkit-transform-origin: center center;
-        text-align: center;
         white-space: nowrap;
       }
-
-      .time {
-        font-size: 120px;
-        line-height: 1;
-        letter-spacing: 1px;
+      .panel {
+        border: 6px solid #000;
+        padding: 28px 28px 34px;
+        background: #fff;
+        text-align: left;
+        display: inline-block;
+        white-space: normal;
+        -webkit-transform: scale(0.75, 1);
+        transform: scale(0.65, 1);
+        -webkit-transform-origin: left top;
+        transform-origin: left top;
       }
-      .date {
+
+      .clock-stack {
+        text-align: left;
+      }
+      .time-line {
+        font-family: "InstrumentSerif", serif;
+        font-style: italic;
+        line-height: 1;
+        display: inline-block;
+      }
+      .time-hour,
+      .time-minute {
+        font-size: 320px;
+        letter-spacing: 2px;
+        display: inline-block;
+      }
+      .time-colon {
+        font-size: 300px;
+        padding: 0 16px;
+        display: inline-block;
+      }
+      .time-period {
+        font-size: 84px;
+        font-style: normal;
+        letter-spacing: 6px;
+        display: inline-block;
+        vertical-align: top;
+        margin-top: 46px;
+        margin-left: 12px;
+      }
+      .date-line {
+        font-size: 64px;
+        margin-top: 12px;
+        letter-spacing: 4px;
+        opacity: 0.8;
+      }
+
+      .alert-banner {
+        margin-top: 34px;
+        padding: 12px 24px;
+        border: 4px solid #000;
+        font-family: "InstrumentSerif", serif;
+        font-style: normal;
+        font-size: 72px;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+      .alert-level-none {
+        opacity: 0.4;
+      }
+      .alert-level-yellow {
+        background: #e8e8e8;
+      }
+      .alert-level-orange {
+        background: #dcdcdc;
+      }
+      .alert-level-red {
+        background: #d0d0d0;
+      }
+
+      .sensor-grid {
+        margin-top: 36px;
+        text-align: center;
+      }
+      .sensor-card {
+        display: inline-block;
+        margin: 0 12px 24px;
+        padding: 16px 20px 22px;
+        border: 4px solid #000;
+        min-width: 240px;
+        text-align: center;
+      }
+      .sensor-label {
+        font-size: 40px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        opacity: 0.6;
+      }
+      .sensor-value {
+        font-size: 80px;
         margin-top: 10px;
-        font-size: 28px;
-        opacity: 0.85;
+        font-style: italic;
+        letter-spacing: 2px;
       }
 
       /* Simple “frame” guides (optional) */
@@ -60,8 +151,40 @@
 
     <!-- Rotated content so it’s horizontal with USB on the RIGHT -->
     <div class="rotor">
-      <div id="time" class="time">--:--</div>
-      <div id="date" class="date">----------</div>
+      <div class="panel">
+        <div class="clock-stack">
+          <div class="time-line">
+            <span id="time-hour" class="time-hour">--</span>
+            <span class="time-colon">:</span>
+            <span id="time-minute" class="time-minute">--</span>
+            <span id="time-period" class="time-period">AM</span>
+          </div>
+          <div id="date" class="date-line">---</div>
+        </div>
+
+        <div id="sensor-alert" class="alert-banner alert-level-none">
+          Alert: —
+        </div>
+
+        <div class="sensor-grid">
+          <div class="sensor-card">
+            <div class="sensor-label">Temperature</div>
+            <div id="sensor-temp" class="sensor-value">--.- °C</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label">Humidity</div>
+            <div id="sensor-humidity" class="sensor-value">-- %</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label">Pressure</div>
+            <div id="sensor-pressure" class="sensor-value">----.- hPa</div>
+          </div>
+          <div class="sensor-card">
+            <div class="sensor-label">Light</div>
+            <div id="sensor-light" class="sensor-value">--- lx</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -73,20 +196,204 @@
         return document.getElementById(id);
       }
 
-      function updateClock() {
-        var d = new Date();
-        $("time").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
-        $("date").textContent =
-          d.getFullYear() +
-          "-" +
-          pad(d.getMonth() + 1) +
-          "-" +
-          pad(d.getDate());
+      var SENSOR_URL = "http://192.168.1.50/sensors_v2";
+      var sensorFields = null;
+      var timeParts = null;
+      var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var MONTHS = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      function ensureTimeParts() {
+        if (timeParts) {
+          return true;
+        }
+        timeParts = {
+          hour: $("time-hour"),
+          minute: $("time-minute"),
+          period: $("time-period"),
+          date: $("date"),
+        };
+        return (
+          timeParts.hour &&
+          timeParts.minute &&
+          timeParts.period &&
+          timeParts.date
+        );
       }
 
-      // First paint + gentle cadence for e-ink
+      function getISTDate() {
+        var now = new Date();
+        var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+        return new Date(utc + 19800000); // IST is UTC+05:30 (5.5 * 60 * 60 * 1000)
+      }
+
+      function updateClock() {
+        var d = getISTDate();
+        if (!ensureTimeParts()) {
+          return;
+        }
+        var hours = d.getHours();
+        var period = hours >= 12 ? "PM" : "AM";
+        var hour12 = hours % 12;
+        if (hour12 === 0) {
+          hour12 = 12;
+        }
+        timeParts.hour.textContent =
+          hour12 < 10 ? "0" + hour12 : String(hour12);
+        timeParts.minute.textContent = pad(d.getMinutes());
+        timeParts.period.textContent = period;
+        var dateLabel =
+          WEEKDAYS[d.getDay()] +
+          " · " +
+          pad(d.getDate()) +
+          " " +
+          MONTHS[d.getMonth()] +
+          " " +
+          d.getFullYear() +
+          " · IST";
+        timeParts.date.textContent = dateLabel;
+      }
+
+      function ensureSensorFields() {
+        if (sensorFields) {
+          return true;
+        }
+        sensorFields = {
+          alert: $("sensor-alert"),
+          temp: $("sensor-temp"),
+          humidity: $("sensor-humidity"),
+          pressure: $("sensor-pressure"),
+          light: $("sensor-light"),
+        };
+        return (
+          sensorFields.alert &&
+          sensorFields.temp &&
+          sensorFields.humidity &&
+          sensorFields.pressure &&
+          sensorFields.light
+        );
+      }
+
+      function setAlertBanner(level, overrideText) {
+        if (!sensorFields || !sensorFields.alert) {
+          return;
+        }
+        var banner = sensorFields.alert;
+        var cls = "alert-level-none";
+        if (level === "yellow") {
+          cls = "alert-level-yellow";
+        } else if (level === "orange") {
+          cls = "alert-level-orange";
+        } else if (level === "red") {
+          cls = "alert-level-red";
+        }
+        banner.className = "alert-banner " + cls;
+        var label;
+        if (overrideText != null) {
+          label = overrideText;
+        } else if (level) {
+          label = String(level).toUpperCase();
+        } else {
+          label = "NONE";
+        }
+        banner.textContent = "Alert: " + label;
+      }
+
+      function displaySensorValues(payload) {
+        if (!ensureSensorFields()) {
+          return;
+        }
+        if (payload && payload.ok) {
+          setAlertBanner(payload.alert || "none");
+          sensorFields.temp.textContent =
+            payload.temp_c != null ? payload.temp_c.toFixed(1) + " °C" : "—";
+          sensorFields.humidity.textContent =
+            payload.humidity_pct != null ? payload.humidity_pct + " %" : "—";
+          sensorFields.pressure.textContent =
+            payload.pressure_hpa != null
+              ? payload.pressure_hpa.toFixed(1) + " hPa"
+              : "—";
+          sensorFields.light.textContent =
+            payload.light_lux != null
+              ? payload.light_lux.toFixed(1) + " lx"
+              : "—";
+        } else {
+          displaySensorError("—");
+        }
+      }
+
+      function displaySensorError(fallbackText) {
+        if (!ensureSensorFields()) {
+          return;
+        }
+        var text = fallbackText || "—";
+        setAlertBanner("none", text);
+        sensorFields.temp.textContent = text;
+        sensorFields.humidity.textContent = text;
+        sensorFields.pressure.textContent = text;
+        sensorFields.light.textContent = text;
+      }
+
+      function updateSensor() {
+        if (!ensureSensorFields()) {
+          return;
+        }
+
+        setAlertBanner("none", "…");
+        sensorFields.temp.textContent = "…";
+        sensorFields.humidity.textContent = "…";
+        sensorFields.pressure.textContent = "…";
+        sensorFields.light.textContent = "…";
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", SENSOR_URL + "?t=" + new Date().getTime(), true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                var payload = JSON.parse(xhr.responseText);
+                displaySensorValues(payload);
+              } catch (err) {
+                displaySensorError("Err");
+              }
+            } else {
+              displaySensorError("Offline");
+            }
+          }
+        };
+        xhr.onerror = function () {
+          displaySensorError("Network");
+        };
+        xhr.send(null);
+      }
+
+      function scheduleNextTick() {
+        var now = new Date();
+        var msUntilNextMinute =
+          (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+        setTimeout(function () {
+          updateClock();
+          updateSensor();
+          scheduleNextTick();
+        }, msUntilNextMinute);
+      }
+
+      // First paint + align updates to the start of each minute
       updateClock();
-      setInterval(updateClock, 30000); // 30s is a good balance on e-ink
+      updateSensor();
+      scheduleNextTick();
     </script>
   </body>
 </html>
