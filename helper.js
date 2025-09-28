@@ -95,7 +95,16 @@ async function shutdownUI(opts = {}) {
   }
   console.log(`[helper] Waiting ${waitMs / 1000}s after dimming backlight`);
   await delay(waitMs);
-
+    try {
+    await endBrowser();
+    console.log("[helper] Browser stop command sent");
+  } catch (e) {
+    console.error(
+      "[helper] Failed to stop the browser on shutdown:",
+      e.message || e
+    );
+  }
+  delay(5 * 1000);
   try {
     await endKindle();
     console.log("[helper] Kindle UI stop command sent");
@@ -108,15 +117,7 @@ async function shutdownUI(opts = {}) {
   console.log(`[helper] Waiting ${waitMs / 1000}s after stopping Kindle UI`);
   await delay(waitMs);
 
-  try {
-    await endBrowser();
-    console.log("[helper] Browser stop command sent");
-  } catch (e) {
-    console.error(
-      "[helper] Failed to stop the browser on shutdown:",
-      e.message || e
-    );
-  }
+
   console.log(`[helper] Waiting ${waitMs / 1000}s after stopping browser`);
   await delay(waitMs);
 
