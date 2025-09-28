@@ -31,6 +31,12 @@ function createLegacyClockScreen({ helper, kindle }) {
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
     return res.json();
   }
+  async function fetchNews() {
+    const url = "http://192.168.1.100:3000/news_items";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Fetch news failed: ${res.status}`);
+    return res.json();
+  }
   async function paintAlert(alertJson) {
     try {
       if (!alertJson || !alertJson.value || !alertJson.value.message) {
@@ -55,18 +61,59 @@ function createLegacyClockScreen({ helper, kindle }) {
     }
   }
 
+  async function paintNews(newsJson) {
+    try {
+      if (
+        !newsJson ||
+        !newsJson.value ||
+        !newsJson.value.title ||
+        !newsJson.value.summary
+      ) {
+        throw new Error("Invalid news payload");
+      }
+
+      const title = String(newsJson.value.title || "").replace(/"/g, '\\"');
+      const summary = String(newsJson.value.summary || "").replace(/"/g, '\\"');
+
+      console.log("[screen] Painting news, title:", title);
+
+      // Title (larger, top)
+      const titleCmd = `/mnt/us/usbnet/bin/fbink -q -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,px=200,top=0,left=0,right=0,bottom=0 -m "${title}"`;
+      // Summary (smaller, lower on the screen)
+      const summaryCmd = `/mnt/us/usbnet/bin/fbink -q -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,px=150,top=500,left=0,right=0,bottom=0 -m "${summary}"`;
+
+      await kindle.exec(titleCmd);
+      await new Promise((r) => setTimeout(r, 250));
+      await kindle.exec(summaryCmd);
+    } catch (e) {
+      console.error("Failed to paint news:", e.message || e);
+      throw e;
+    }
+  }
+
   async function start() {
     if (isRunning) return;
     isRunning = true;
 
     await initialiseDisplay();
 
+    // screenType can be 'alert' or 'news' (default 'alert')
+    const type = screenType || "alert";
     try {
-      const alertJson = await fetchAlert();
-      console.log("[screen] Alert fetched:", JSON.stringify(alertJson));
-      await paintAlert(alertJson);
+      if (type === "news") {
+        const newsJson = await fetchNews();
+        console.log("[screen] News fetched:", JSON.stringify(newsJson));
+        await paintNews(newsJson);
+      } else {
+        const alertJson = await fetchAlert();
+        console.log("[screen] Alert fetched:", JSON.stringify(alertJson));
+        await paintAlert(alertJson);
+      }
     } catch (e) {
-      console.error("[screen] Failed to fetch or paint alert:", e.message || e);
+      console.error(
+        "[screen] Failed to fetch or paint screen content:",
+        e.message || e
+      );
     }
   }
 

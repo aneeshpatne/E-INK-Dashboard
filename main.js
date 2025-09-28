@@ -11,6 +11,10 @@ const BROWSER_LAUNCH_DELAY_MS = 100 * 1000;
 const RECONNECT_INITIAL_DELAY_MS = 5 * 1000;
 const RECONNECT_POLL_INTERVAL_MS = 5 * 1000;
 
+// Enable fetching news items alternately with alerts on quarter-hour activations
+const NEWS_ENABLED = true;
+let lastScreenWasNews = false;
+
 let mode = "legacy"; // "browser" | "legacy"
 let legacyClock = null;
 let isShuttingDown = false;
@@ -173,8 +177,15 @@ async function activateScreenOnce() {
   let screen = null;
   try {
     console.log("[screen-schedule] Activating screen mode");
+    let screenType = "alert";
+    if (NEWS_ENABLED) {
+      // alternate between news and alert each invocation
+      screenType = lastScreenWasNews ? "alert" : "news";
+      lastScreenWasNews = !lastScreenWasNews;
+    }
+
     screen = createLegacyClockScreen({ helper, kindle });
-    await screen.start();
+    await screen.start(screenType);
     // keep it active for 1 minute
     await delay(60 * 1000);
     await screen.shutdown();
