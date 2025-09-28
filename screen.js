@@ -91,7 +91,7 @@ function createLegacyClockScreen({ helper, kindle }) {
     }
   }
 
-  async function start() {
+  async function start(screenType = "alert") {
     if (isRunning) return;
     isRunning = true;
 
