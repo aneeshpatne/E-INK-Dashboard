@@ -30,7 +30,7 @@ async function bootKindleAndLaunchBrowser(url, opts = {}) {
     launchDelayMs = 100 * 1000,
     initialDelayMs = 5 * 1000,
     pollIntervalMs = 5 * 1000,
-    backlightLevel = 10,
+    backlightLevel = 15,
   } = opts;
 
   console.log("[helper] Initiating Kindle UI launch");
@@ -72,6 +72,12 @@ async function bootKindleAndLaunchBrowser(url, opts = {}) {
     console.log("[helper] Backlight adjustment request sent");
   } catch (e) {
     console.error("[helper] Failed to set daytime backlight:", e.message || e);
+  }
+  console.log("[helper] Disable Screensaver");
+  try {
+    await disableScreensaver();
+  } catch (e) {
+    console.error("[helper] Failed to disable screen saver", e.message || e);
   }
 }
 
@@ -140,6 +146,10 @@ async function refreshRegion() {
   await kindle.exec(
     "/mnt/us/usbnet/bin/fbink -q -k top=0,left=350,width=750,height=375 -B WHITE -f -W GC16"
   );
+}
+
+async function disableScreensaver() {
+  await kindle.exec("lipc-set-prop com.lab126.powerd preventScreenSaver 1");
 }
 
 async function setBacklight(level) {
