@@ -94,7 +94,7 @@ function createLegacyClockScreen({ helper, kindle }) {
     isRunning = true;
 
     await initialiseDisplay();
-
+    await new Promise((res) => setTimeout(res, 5 * 1000));
     // screenType can be 'alert' or 'news' (default 'alert')
     const type = screenType || "alert";
     try {
