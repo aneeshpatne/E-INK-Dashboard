@@ -12,6 +12,11 @@ function createLegacyClockScreen({ helper, kindle }) {
     }
 
     try {
+      await helper.setBacklight(25);
+    } catch (e) {
+      console.error("Failed to change backlight on shutdown:", e.message || e);
+    }
+    try {
       await kindle.exec("/mnt/us/usbnet/bin/fbink -q -c -f -W GC16");
     } catch (e) {
       console.error("Failed to clear display on startup:", e.message || e);
