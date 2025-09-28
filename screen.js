@@ -6,23 +6,21 @@ function createLegacyClockScreen({ helper, kindle }) {
 
   async function initialiseDisplay() {
     try {
+      await kindle.exec("/mnt/us/usbnet/bin/fbink -q -k -B WHITE -f -W GC16");
+    } catch (e) {
+      console.error("Failed to clear display on startup:", e.message || e);
+    }
+    try {
       await helper.setRotation(0);
     } catch (e) {
       console.error("Failed to set rotation on startup:", e.message || e);
     }
 
     try {
-      await helper.setBacklight(25);
+      await helper.setBacklight(24);
     } catch (e) {
       console.error("Failed to change backlight on shutdown:", e.message || e);
     }
-    try {
-      await kindle.exec("/mnt/us/usbnet/bin/fbink -q -c -f -W GC16");
-    } catch (e) {
-      console.error("Failed to clear display on startup:", e.message || e);
-    }
-
-    // regional refresh removed per request
   }
 
   async function fetchAlert() {
@@ -122,7 +120,7 @@ function createLegacyClockScreen({ helper, kindle }) {
     isShuttingDown = true;
 
     try {
-      await helper.setBacklight(15);
+      await helper.setBacklight(20);
     } catch (e) {
       console.error("Failed to change backlight on shutdown:", e.message || e);
     }
