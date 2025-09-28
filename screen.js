@@ -20,15 +20,12 @@ function createLegacyClockScreen({ helper, kindle }) {
     // regional refresh removed per request
   }
 
-  // Fetch the alert JSON locally (not on the Kindle) using global fetch
   async function fetchAlert() {
     const url = "http://192.168.1.100:3000/alert";
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
     return res.json();
   }
-
-  // Paint the alert onto the Kindle display via fbink (executed on Kindle)
   async function paintAlert(alertJson) {
     try {
       if (!alertJson || !alertJson.value || !alertJson.value.message) {
@@ -45,11 +42,8 @@ function createLegacyClockScreen({ helper, kindle }) {
       const messageCmd = `/mnt/us/usbnet/bin/fbink -q -t regular=/mnt/us/fonts/InstrumentSerif-Regular.ttf,px=150,top=300,left=0,right=0,bottom=0 -m "${msg}"`;
 
       await kindle.exec(colorCmd);
-      // small pause to ensure Kindle processes first region before drawing next one
       await new Promise((r) => setTimeout(r, 250));
       await kindle.exec(messageCmd);
-
-      // Regional refresh removed per request
     } catch (e) {
       console.error("Failed to paint alert:", e.message || e);
       throw e;
@@ -75,11 +69,11 @@ function createLegacyClockScreen({ helper, kindle }) {
     if (!isRunning || isShuttingDown) return;
     isShuttingDown = true;
 
-    // try {
-    //   await helper.setBacklight(0);
-    // } catch (e) {
-    //   console.error("Failed to dim backlight on shutdown:", e.message || e);
-    // }
+    try {
+      await helper.setBacklight(15);
+    } catch (e) {
+      console.error("Failed to change backlight on shutdown:", e.message || e);
+    }
 
     try {
       await helper.setRotation(3);
