@@ -64,7 +64,7 @@
       }
       .time-hour,
       .time-minute {
-        font-size: 400px;
+        font-size: 450px;
         letter-spacing: 20px;
         display: inline-block;
       }
@@ -83,9 +83,19 @@
         margin-left: 12px;
       }
       .date-line {
-        font-size: 64px;
-        margin-top: 12px;
-        letter-spacing: 4px;
+        font-size: 84px;
+        letter-spacing: 2px;
+        line-height: 1.05;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+        opacity: 0.8;
+      }
+      .day-line {
+        font-size: 72px;
+        letter-spacing: 2px;
+        line-height: 1.05;
+        margin-top: -8px; /* Pull day closer to date */
+        padding-top: 0px;
         opacity: 0.8;
       }
 
@@ -144,6 +154,16 @@
         inset: 0;
         border: 0 solid #000; /* set to 1px if you want a border */
       }
+      .day-date-container {
+        position: absolute;
+        top: 28px;
+        right: 30px;
+        font-size: 84px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0px; /* Remove vertical gap */
+      }
     </style>
   </head>
   <body>
@@ -159,7 +179,11 @@
             <span id="time-minute" class="time-minute">--</span>
             <span id="time-period" class="time-period">AM</span>
           </div>
+          <div class="day-date-container">
           <div id="date" class="date-line">---</div>
+          <div id = "day" class="day-line">---</div>
+          </div>
+          
         </div>
 
         <div id="sensor-alert" class="alert-banner alert-level-none">
@@ -224,12 +248,14 @@
           minute: $("time-minute"),
           period: $("time-period"),
           date: $("date"),
+          day: $("day"),
         };
         return (
           timeParts.hour &&
           timeParts.minute &&
           timeParts.period &&
-          timeParts.date
+          timeParts.date &&
+          timeParts.day
         );
       }
 
@@ -255,15 +281,10 @@
         timeParts.minute.textContent = pad(d.getMinutes());
         timeParts.period.textContent = period;
         var dateLabel =
-          WEEKDAYS[d.getDay()] +
-          " · " +
-          pad(d.getDate()) +
-          " " +
-          MONTHS[d.getMonth()] +
-          " " +
-          d.getFullYear() +
-          " · IST";
+          pad(d.getDate()) 
+          ;
         timeParts.date.textContent = dateLabel;
+        timeParts.day.textContent = WEEKDAYS[d.getDay()];
       }
 
       function ensureSensorFields() {
