@@ -30,7 +30,7 @@ async function bootKindleAndLaunchBrowser(url, opts = {}) {
     launchDelayMs = 100 * 1000,
     initialDelayMs = 5 * 1000,
     pollIntervalMs = 5 * 1000,
-    backlightLevel = 15,
+    backlightLevel = 20,
   } = opts;
 
   console.log("[helper] Initiating Kindle UI launch");
