@@ -84,19 +84,20 @@
       }
       .date-line {
         font-size: 84px;
-        letter-spacing: 2px;
-        line-height: 1.05;
-        margin-bottom: 0px;
-        padding-bottom: 0px;
+        letter-spacing: 4px;
         opacity: 0.8;
+        /* Reduce default spacing below the big date number */
+        margin: 0 0 6px 0;
+        line-height: 0.95;
       }
+
+      /* Day (weekday) line - keep compact and aligned with the date */
       .day-line {
-        font-size: 72px;
-        letter-spacing: 2px;
-        line-height: 1.05;
-        margin-top: -8px; /* Pull day closer to date */
-        padding-top: 0px;
-        opacity: 0.8;
+        font-size: 72px; /* matches .day-date-container base size */
+        margin: 0;
+        line-height: 1;
+        letter-spacing: 4px;
+        opacity: 0.9;
       }
 
       .alert-banner {
@@ -156,13 +157,13 @@
       }
       .day-date-container {
         position: absolute;
-        top: 28px;
-        right: 30px;
+        top: 0px;
+        right: 0px;
         font-size: 84px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0px; /* Remove vertical gap */
+        /* keep the date/day stacked tightly and right-aligned */
+        display: inline-block;
+        text-align: right;
+        padding-left: 0;
       }
     </style>
   </head>
@@ -180,10 +181,9 @@
             <span id="time-period" class="time-period">AM</span>
           </div>
           <div class="day-date-container">
-          <div id="date" class="date-line">---</div>
-          <div id = "day" class="day-line">---</div>
+            <div id="date" class="date-line">---</div>
+            <div id="day" class="day-line">---</div>
           </div>
-          
         </div>
 
         <div id="sensor-alert" class="alert-banner alert-level-none">
@@ -280,9 +280,7 @@
           hour12 < 10 ? "0" + hour12 : String(hour12);
         timeParts.minute.textContent = pad(d.getMinutes());
         timeParts.period.textContent = period;
-        var dateLabel =
-          pad(d.getDate()) 
-          ;
+        var dateLabel = pad(d.getDate());
         timeParts.date.textContent = dateLabel;
         timeParts.day.textContent = WEEKDAYS[d.getDay()];
       }
