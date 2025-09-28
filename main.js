@@ -162,6 +162,13 @@ function scheduleScreenLoop() {
 
 async function activateScreenOnce() {
   if (isScreenActive) return;
+  const now = getIstDate();
+  if (!isWithinHours(now, ACTIVE_START_HOUR, ACTIVE_END_HOUR)) {
+    console.log(
+      `[screen-schedule] Skipping activation at ${now.toISOString()} — outside active hours (${ACTIVE_START_HOUR}:00-${ACTIVE_END_HOUR}:00 IST)`
+    );
+    return;
+  }
   isScreenActive = true;
   let screen = null;
   try {
