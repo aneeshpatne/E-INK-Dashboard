@@ -49,7 +49,6 @@ async function waitForKindleReconnect() {
 }
 
 async function startup() {
-  // delegate browser-mode startup to browser.js
   console.log("[startup] Delegating to browser mode startup");
   await browserMode.start();
 }
@@ -81,13 +80,11 @@ async function main() {
         );
       }
     } else {
-      // schedule browser boot at next 7:00
       console.log(
         "[main] Not active hours — browser will be started at 07:00 IST"
       );
     }
 
-    // Schedule daily browser start at 07:00 IST and sleep at 23:00 IST
     scheduleDailyAt(ACTIVE_START_HOUR, 0, async () => {
       console.log("[schedule] 07:00 triggered — starting browser");
       try {
@@ -120,11 +117,7 @@ async function main() {
       }
     });
 
-    // Schedule screen activations every 15 minutes aligned to quarter-hours
     scheduleScreenLoop();
-
-    // Also immediately start a single screen activation on startup if desired
-    // (commented out) await startLegacyClock();
   } catch (e) {
     console.error("[main] startup failed:", e && e.message ? e.message : e);
     await shutdown();
@@ -138,7 +131,7 @@ function msUntilNextQuarter() {
   const ms = now.getMilliseconds();
   const nextQuarter =
     Math.ceil((minutes * 60 + seconds + ms / 1000) / (15 * 60)) * (15 * 60);
-  const targetSeconds = nextQuarter; // seconds since start of hour
+  const targetSeconds = nextQuarter;
   const targetMinutes = Math.floor(targetSeconds / 60);
   const targetSecs = Math.floor(targetSeconds % 60);
   const next = new Date(now.getTime());
@@ -179,14 +172,12 @@ async function activateScreenOnce() {
     console.log("[screen-schedule] Activating screen mode");
     let screenType = "alert";
     if (NEWS_ENABLED) {
-      // alternate between news and alert each invocation
       screenType = lastScreenWasNews ? "alert" : "news";
       lastScreenWasNews = !lastScreenWasNews;
     }
 
     screen = createLegacyClockScreen({ helper, kindle });
     await screen.start(screenType);
-    // keep it active for 1 minute
     await delay(60 * 1000);
     await screen.shutdown();
     console.log("[screen-schedule] Deactivated screen mode");
@@ -211,7 +202,7 @@ function scheduleDailyAt(hour, minute, fn) {
   const ms = target.getTime() - now.getTime();
   setTimeout(() => {
     fn();
-    // schedule next day
+
     setInterval(fn, 24 * 60 * 60 * 1000);
   }, ms);
 }
@@ -225,39 +216,27 @@ async function shutdown() {
       await legacyClock.shutdown();
     } else if (mode === "browser") {
       try {
-        // await helper.setBacklight(0);
-        console.log("[shutdown] Backlight dim command sent");
-      } catch (e) {
-        console.error("Failed to dim backlight on shutdown:", e.message || e);
-      }
-      console.log("[shutdown] Waiting 5s after dimming backlight");
-      await delay(5 * 1000);
-      try {
-        // await helper.endKindle();
-        console.log("[shutdown] Kindle UI stop command sent");
-      } catch (e) {
-        console.error("Failed to stop Kindle UI on shutdown:", e.message || e);
-      }
-      console.log("[shutdown] Waiting 5s after stopping Kindle UI");
-      await delay(5 * 1000);
+        await kindle.connect();
+      } catch (_) {}
 
       try {
-        // await helper.endBrowser();
-        console.log("[shutdown] Browser stop command sent");
+        await browserMode.shutdown();
+        console.log("[shutdown] browserMode.shutdown() completed");
       } catch (e) {
         console.error(
-          "Failed to stop the browser on shutdown: ",
-          e.message || e
+          "[shutdown] browser-mode shutdown failed:",
+          e && e.message ? e.message : e
         );
       }
-      console.log("[shutdown] Waiting 5s after stopping browser");
-      await delay(5 * 1000);
 
       try {
         await helper.blackDisplay();
-        console.log("[shutdown] Display black command sent");
+        console.log("[shutdown] Display black command sent (fallback)");
       } catch (e) {
-        console.error("Failed to shut display on shutdown: ", e.message || e);
+        console.error(
+          "Failed to shut display on shutdown (fallback): ",
+          e.message || e
+        );
       }
     }
   } finally {
