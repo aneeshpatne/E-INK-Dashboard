@@ -8,4 +8,4 @@ const value = await client.get("changes");
 
 const data = await value.json();
 
-console.log();
+console.log(data);
