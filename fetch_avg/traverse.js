@@ -1,7 +1,7 @@
-import { readdirSync, statSync } from "fs";
+import { readdirSync, statSync, readFileSync } from "fs";
 import { join } from "path";
 import { connect, exec, close } from "../connect.js";
-import { blackDisplay } from "../helper.js";
+import { flashClearDisplay } from "../helper.js";
 
 function traverseDirectory(dirPath) {
   try {
@@ -10,7 +10,10 @@ function traverseDirectory(dirPath) {
       const fullPath = join(dirPath, item);
       const stat = statSync(fullPath);
       if (!stat.isDirectory()) {
-        console.log(fullPath);
+        const base64 = readFileSync(fullPath, { encoding: "base64" });
+        console.log(`File: ${fullPath}`);
+        console.log(`Base64: ${base64}`);
+        console.log("---");
       }
     });
   } catch (error) {
@@ -19,7 +22,7 @@ function traverseDirectory(dirPath) {
 }
 
 async function sendImage() {
-  await blackDisplay();
+  await flashClearDisplay();
 }
 
 async function main() {
@@ -28,8 +31,8 @@ async function main() {
     await connect();
     console.log("Connected!");
 
-    // const imageDir = join(process.cwd(), ".", "image");
-    // traverseDirectory(imageDir);
+    const imageDir = join(process.cwd(), ".", "image");
+    traverseDirectory(imageDir);
     await sendImage();
 
     console.log("Done!");

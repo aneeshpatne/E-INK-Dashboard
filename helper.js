@@ -80,7 +80,13 @@ async function bootKindleAndLaunchBrowser(url, opts = {}) {
     console.error("[helper] Failed to disable screen saver", e.message || e);
   }
 }
-
+async function flashClearDisplay() {
+  try {
+    await kindle.exec("/mnt/us/usbnet/bin/fbink -q -k -B WHITE -f -W GC16");
+  } catch (e) {
+    console.error("Failed to run final fbink refresh:", e.message || e);
+  }
+}
 async function shutdownUI(opts = {}) {
   const { waitMs = 5000 } = opts;
   console.log("[helper] Running browser-mode shutdown steps");
@@ -204,4 +210,5 @@ export {
   shutdownUI,
   refreshFramework,
   disableScreensaver,
+  flashClearDisplay,
 };
