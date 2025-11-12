@@ -1,4 +1,4 @@
-const helper = require("./helper");
+import * as helper from "./helper.js";
 
 const BROWSER_URL = "http://192.168.1.100:8001/";
 
@@ -10,4 +10,4 @@ async function shutdown() {
   await helper.shutdownUI();
 }
 
-module.exports = { start, shutdown };
+export { start, shutdown };

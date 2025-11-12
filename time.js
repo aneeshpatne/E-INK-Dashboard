@@ -17,8 +17,4 @@ function isWithinHours(date, startHour, endHour) {
   return hour >= startHour && hour < endHour;
 }
 
-module.exports = {
-  getIstDate,
-  getTimeString,
-  isWithinHours,
-};
+export { getIstDate, getTimeString, isWithinHours };

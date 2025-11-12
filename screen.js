@@ -146,6 +146,4 @@ function createLegacyClockScreen({ helper, kindle }) {
   };
 }
 
-module.exports = {
-  createLegacyClockScreen,
-};
+export { createLegacyClockScreen };

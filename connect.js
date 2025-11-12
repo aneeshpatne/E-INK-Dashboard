@@ -1,7 +1,7 @@
 // kindle.js
-const { Client } = require("ssh2");
-const fs = require("fs");
-const path = require("path");
+import { Client } from "ssh2";
+import fs from "fs";
+import path from "path";
 
 const host = "192.168.1.10"; // your Kindle IP
 const user = "root";
@@ -69,4 +69,4 @@ function close() {
   if (conn) conn.end();
 }
 
-module.exports = { connect, exec, put, close };
+export { connect, exec, put, close };

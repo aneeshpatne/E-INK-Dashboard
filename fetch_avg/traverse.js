@@ -1,7 +1,7 @@
-const { readdirSync, statSync } = require("fs");
-const { join } = require("path");
-const kindle = require("../connect");
-const helper = require("../helper");
+import { readdirSync, statSync } from "fs";
+import { join } from "path";
+import * as kindle from "../connect.js";
+import * as helper from "../helper.js";
 
 function traverseDirectory(dirPath) {
   try {

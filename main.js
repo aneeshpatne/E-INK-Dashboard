@@ -1,8 +1,8 @@
-const helper = require("./helper");
-const kindle = require("./connect");
-const { getIstDate, isWithinHours } = require("./time");
-const { createLegacyClockScreen } = require("./screen");
-const browserMode = require("./browser");
+import * as helper from "./helper.js";
+import * as kindle from "./connect.js";
+import { getIstDate, isWithinHours } from "./time.js";
+import { createLegacyClockScreen } from "./screen.js";
+import * as browserMode from "./browser.js";
 
 const ACTIVE_START_HOUR = 7;
 const ACTIVE_END_HOUR = 23;
@@ -89,7 +89,8 @@ async function main() {
       console.log("[schedule] 07:00 triggered — starting browser");
       try {
         await kindle.connect();
-      } catch (_) {}start
+      } catch (_) {}
+      start;
       try {
         await browserMode.start();
         mode = "browser";

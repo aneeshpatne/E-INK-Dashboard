@@ -1,5 +1,5 @@
-const express = require("express");
-const Redis = require("ioredis");
+import express from "express";
+import Redis from "ioredis";
 
 const app = express();
 const redis = new Redis();

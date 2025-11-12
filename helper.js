@@ -1,4 +1,4 @@
-const kindle = require("./connect");
+import * as kindle from "./connect.js";
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -188,7 +188,7 @@ async function blackDisplay() {
 async function refreshFramework() {
   await kindle.exec("restart framework");
 }
-module.exports = {
+export {
   setTime,
   clearTime,
   refreshRegion,
@@ -203,4 +203,5 @@ module.exports = {
   bootKindleAndLaunchBrowser,
   shutdownUI,
   refreshFramework,
+  disableScreensaver,
 };
