@@ -2,7 +2,7 @@ import { readdirSync, statSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { connect, exec, put, close } from "../connect.js";
-import { flashClearDisplay } from "../helper.js";
+import { flashClearDisplay, setRotation } from "../helper.js";
 
 async function traverseDirectory(dirPath) {
   try {
@@ -25,6 +25,7 @@ async function traverseDirectory(dirPath) {
 async function sendImage(base64) {
   try {
     // Decode base64 to buffer
+    await flashClearDisplay();
     const imageBuffer = Buffer.from(base64, "base64");
 
     // Create temporary file
@@ -49,7 +50,7 @@ async function main() {
     console.log("Connecting to Kindle...");
     await connect();
     console.log("Connected!");
-
+    await setRotation(3);
     const imageDir = join(process.cwd(), ".", "image");
     await traverseDirectory(imageDir);
 
@@ -57,6 +58,7 @@ async function main() {
   } catch (err) {
     console.error("Error:", err);
   } finally {
+    await setRotation(0);
     close();
   }
 }
