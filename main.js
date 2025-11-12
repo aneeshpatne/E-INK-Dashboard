@@ -89,7 +89,7 @@ async function main() {
       console.log("[schedule] 07:00 triggered — starting browser");
       try {
         await kindle.connect();
-      } catch (_) {}
+      } catch (_) {}start
       try {
         await browserMode.start();
         mode = "browser";
@@ -178,7 +178,7 @@ async function activateScreenOnce() {
 
     screen = createLegacyClockScreen({ helper, kindle });
     await screen.start(screenType);
-    await delay(60 * 1000);
+    await delay(45 * 1000);
     await screen.shutdown();
     console.log("[screen-schedule] Deactivated screen mode");
   } catch (e) {

@@ -34,7 +34,7 @@
         -webkit-text-size-adjust: 100%;
       }
 
-      /* We’ll rotate the inner canvas 90deg so it reads correctly
+      /* We'll rotate the inner canvas 90deg so it reads correctly
        when the device is held with the USB port on the RIGHT. */
       .rotor {
         position: absolute;
@@ -64,20 +64,23 @@
       }
       .time-line {
         font-family: "InstrumentSerif", serif;
+        /* padding-left: 25px; */
         font-style: italic;
         line-height: 1;
         display: inline-block;
       }
       .time-hour,
       .time-minute {
-        font-size: 550px;
-        letter-spacing: 20px;
+        font-size: 600px;
+        letter-spacing: 50px;
         display: inline-block;
       }
       .time-colon {
         font-size: 300px;
         padding: 0 16px;
         display: inline-block;
+        position: relative;
+        top: -100px;
       }
       .time-period {
         font-size: 84px;
@@ -86,7 +89,7 @@
         display: inline-block;
         vertical-align: top;
         margin-top: 46px;
-        margin-left: 20px;
+        margin-left: 12px;
       }
       .date-line {
         font-size: 84px;
@@ -157,7 +160,7 @@
         font-weight: 700;
       }
 
-      /* Simple “frame” guides (optional) */
+      /* Simple "frame" guides (optional) */
       .frame {
         position: fixed;
         inset: 0;
@@ -177,7 +180,7 @@
   <body>
     <div class="frame"></div>
 
-    <!-- Rotated content so it’s horizontal with USB on the RIGHT -->
+    <!-- Rotated content so it's horizontal with USB on the RIGHT -->
     <div class="rotor">
       <div class="panel">
         <div class="clock-stack">
@@ -219,6 +222,7 @@
     </div>
 
     <script>
+      
       // Small ES5 helpers for old Kindle WebKit
       function pad(n) {
         return (n < 10 ? "0" : "") + n;
@@ -355,21 +359,8 @@
             payload.light_lux != null
               ? payload.light_lux.toFixed(1) + " lx"
               : "—";
-        } else {
-          displaySensorError("—");
         }
-      }
-
-      function displaySensorError(fallbackText) {
-        if (!ensureSensorFields()) {
-          return;
-        }
-        var text = fallbackText || "—";
-        setAlertBanner("none", text);
-        sensorFields.temp.textContent = text;
-        sensorFields.humidity.textContent = text;
-        sensorFields.pressure.textContent = text;
-        sensorFields.light.textContent = text;
+        // If payload is not OK, do nothing - keep previous values
       }
 
       function updateSensor() {
@@ -377,12 +368,7 @@
           return;
         }
 
-        setAlertBanner("none", "…");
-        sensorFields.temp.textContent = "…";
-        sensorFields.humidity.textContent = "…";
-        sensorFields.pressure.textContent = "…";
-        sensorFields.light.textContent = "…";
-
+        // Don't show loading state - just keep current values visible
         var xhr = new XMLHttpRequest();
         xhr.open("GET", SENSOR_URL + "?t=" + new Date().getTime(), true);
         xhr.onreadystatechange = function () {
@@ -392,15 +378,14 @@
                 var payload = JSON.parse(xhr.responseText);
                 displaySensorValues(payload);
               } catch (err) {
-                displaySensorError("Err");
+                // On error, keep previous values - don't update
               }
-            } else {
-              displaySensorError("Offline");
             }
+            // On non-2xx status, keep previous values - don't update
           }
         };
         xhr.onerror = function () {
-          displaySensorError("Network");
+          // On network error, keep previous values - don't update
         };
         xhr.send(null);
       }

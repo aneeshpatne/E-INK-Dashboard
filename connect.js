@@ -3,7 +3,7 @@ const { Client } = require("ssh2");
 const fs = require("fs");
 const path = require("path");
 
-const host = "192.168.1.109"; // your Kindle IP
+const host = "192.168.1.10"; // your Kindle IP
 const user = "root";
 const keyPath = path.join(process.env.HOME, ".ssh", "id_ed25519");
 
