@@ -1,7 +1,7 @@
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
-import {exec} from "../connect.js";
-import {blackDisplay} from "../helper.js";
+import { connect, exec, close } from "../connect.js";
+import { blackDisplay } from "../helper.js";
 
 function traverseDirectory(dirPath) {
   try {
@@ -23,9 +23,21 @@ async function sendImage() {
 }
 
 async function main() {
-  // const imageDir = join(process.cwd(), ".", "image");
-  // traverseDirectory(imageDir);
-  await sendImage();
+  try {
+    console.log("Connecting to Kindle...");
+    await connect();
+    console.log("Connected!");
+
+    // const imageDir = join(process.cwd(), ".", "image");
+    // traverseDirectory(imageDir);
+    await sendImage();
+
+    console.log("Done!");
+  } catch (err) {
+    console.error("Error:", err);
+  } finally {
+    close();
+  }
 }
 
-main().catch((err) => console.error(err));
+main();
