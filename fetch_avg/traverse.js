@@ -1,28 +1,47 @@
-import { readdirSync, statSync, readFileSync } from "fs";
+import { readdirSync, statSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { connect, exec, close } from "../connect.js";
+import { tmpdir } from "os";
+import { connect, exec, put, close } from "../connect.js";
 import { flashClearDisplay } from "../helper.js";
 
-function traverseDirectory(dirPath) {
+async function traverseDirectory(dirPath) {
   try {
     const items = readdirSync(dirPath);
-    items.forEach((item) => {
+    for (const item of items) {
       const fullPath = join(dirPath, item);
       const stat = statSync(fullPath);
       if (!stat.isDirectory()) {
         const base64 = readFileSync(fullPath, { encoding: "base64" });
-        console.log(`File: ${fullPath}`);
-        console.log(`Base64: ${base64}`);
+        await sendImage(base64);
+        await new Promise((res) => setTimeout(res, 10000));
         console.log("---");
       }
-    });
+    }
   } catch (error) {
     console.error(`Error traversing directory: ${error.message}`);
   }
 }
 
-async function sendImage() {
-  await flashClearDisplay();
+async function sendImage(base64) {
+  try {
+    // Decode base64 to buffer
+    const imageBuffer = Buffer.from(base64, "base64");
+
+    // Create temporary file
+    const tempFile = join(tmpdir(), `image_${Date.now()}.png`);
+    writeFileSync(tempFile, imageBuffer);
+
+    // Upload to Kindle
+    const remotePath = `/tmp/display_image.png`;
+    await put(tempFile, remotePath);
+
+    // Display the image using fbink
+    await exec(`/mnt/us/usbnet/bin/fbink -q -c -g file=${remotePath}`);
+
+    console.log(`Displayed image: ${remotePath}`);
+  } catch (error) {
+    console.error(`Failed to send image: ${error.message}`);
+  }
 }
 
 async function main() {
@@ -32,8 +51,7 @@ async function main() {
     console.log("Connected!");
 
     const imageDir = join(process.cwd(), ".", "image");
-    traverseDirectory(imageDir);
-    await sendImage();
+    await traverseDirectory(imageDir);
 
     console.log("Done!");
   } catch (err) {
