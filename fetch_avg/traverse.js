@@ -1,7 +1,7 @@
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
-import kindle from "../connect.js";
-import helper from "../helper.js";
+import {exec} from "../connect.js";
+import {blackDisplay} from "../helper.js";
 
 function traverseDirectory(dirPath) {
   try {
@@ -19,12 +19,12 @@ function traverseDirectory(dirPath) {
 }
 
 async function sendImage() {
-  await helper.blackDisplay();
+  await blackDisplay();
 }
 
 async function main() {
-  const imageDir = join(process.cwd(), ".", "image");
-  traverseDirectory(imageDir);
+  // const imageDir = join(process.cwd(), ".", "image");
+  // traverseDirectory(imageDir);
   await sendImage();
 }
 
