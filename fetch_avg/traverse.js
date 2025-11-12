@@ -1,7 +1,7 @@
 import { readdirSync, statSync } from "fs";
 import { join } from "path";
-import * as kindle from "../connect.js";
-import * as helper from "../helper.js";
+import kindle from "../connect.js";
+import helper from "../helper.js";
 
 function traverseDirectory(dirPath) {
   try {
