@@ -48,14 +48,14 @@ async function sendImage(base64) {
 async function showAvg() {
   try {
     console.log("Connecting to Kindle...");
-    await connect();
-    const imageDir = join(process.cwd(), ".", "image");
+    // await connect();
+    const imageDir = join(process.cwd(), "fetch_avg", "image");
     await traverseDirectory(imageDir);
     console.log("Done!");
   } catch (err) {
     console.error("Error:", err);
   } finally {
-    close();
+    // close();
   }
 }
 export { showAvg };

@@ -3,6 +3,7 @@ import * as kindle from "./connect.js";
 import { getIstDate, isWithinHours } from "./time.js";
 import { createLegacyClockScreen } from "./screen.js";
 import * as browserMode from "./browser.js";
+import { generatePNGs } from "./fetch_avg/main.js";
 
 const ACTIVE_START_HOUR = 7;
 const ACTIVE_END_HOUR = 23;
@@ -13,7 +14,7 @@ const RECONNECT_POLL_INTERVAL_MS = 5 * 1000;
 
 // Enable fetching news items alternately with alerts on quarter-hour activations
 const NEWS_ENABLED = true;
-let lastScreenWasNews = false;
+let lastScreenWasNews = true;
 
 let mode = "legacy"; // "browser" | "legacy"
 let legacyClock = null;
@@ -174,6 +175,10 @@ async function activateScreenOnce() {
     if (NEWS_ENABLED) {
       screenType = lastScreenWasNews ? "alert" : "news";
       lastScreenWasNews = !lastScreenWasNews;
+    }
+
+    if (screenType === "alert") {
+      await generatePNGs();
     }
 
     screen = createLegacyClockScreen({ helper, kindle });

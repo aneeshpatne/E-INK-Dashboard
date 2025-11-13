@@ -1,5 +1,7 @@
 // fetch is used below; time helpers are not needed for alerts
 import { showAvg } from "./fetch_avg/traverse.js";
+import { generatePNGs } from "./fetch_avg/main.js";
+
 function createLegacyClockScreen({ helper, kindle }) {
   let isRunning = false;
   let isShuttingDown = false;
@@ -32,6 +34,7 @@ function createLegacyClockScreen({ helper, kindle }) {
     if (!res.ok) throw new Error(`Fetch news failed: ${res.status}`);
     return res.json();
   }
+
   async function paintAlert(alertJson) {
     try {
       if (!alertJson || !alertJson.value || !alertJson.value.message) {
