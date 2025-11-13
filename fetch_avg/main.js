@@ -7,6 +7,8 @@ import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const SENSOR_URL = "http://192.168.1.50/sensors_v2";
+
 export async function generatePNGs() {
   const WIDTH = 1448;
   const HEIGHT = 1072;
@@ -37,6 +39,16 @@ export async function generatePNGs() {
     await page.close();
   }
 
+  // Fetch current sensor data
+  let currentData = null;
+  try {
+    const response = await fetch(SENSOR_URL);
+    currentData = await response.json();
+    console.log("Fetched current sensor data:", currentData);
+  } catch (error) {
+    console.error("Failed to fetch sensor data:", error);
+  }
+
   const redis = await createClient()
     .on("error", (err) => console.log("Redis Client Error", err))
     .connect();
@@ -45,8 +57,16 @@ export async function generatePNGs() {
   const data = rawValue ? JSON.parse(rawValue) : {};
 
   if (!rawValue) {
-    console.warn("No redis data found for key 'changes'. Rendering empty cards.");
+    console.warn(
+      "No redis data found for key 'changes'. Rendering empty cards."
+    );
   }
+
+  // Helper to determine if change is significant based on percent change
+  const isSignificant = (percentChange) => {
+    if (percentChange === null || percentChange === undefined) return false;
+    return Math.abs(percentChange) >= 5; // 5% threshold for significance
+  };
 
   const metrics = [
     {
@@ -54,30 +74,33 @@ export async function generatePNGs() {
       subtitle: "Indoor climate trend",
       change: toNumber(data.temp_change),
       percentChange: toNumber(data.temp_percent_change),
+      currentValue: currentData?.temp_c ?? null,
       unit: "°C",
-      percentSuffix: "%",
       icon: "🌡️",
       fileName: "image/temperature.png",
+      isSignificant: isSignificant(toNumber(data.temp_percent_change)),
     },
     {
       title: "Humidity",
       subtitle: "Ambient balance",
       change: toNumber(data.humidity_change),
       percentChange: toNumber(data.humidity_percent_change),
+      currentValue: currentData?.humidity_pct ?? null,
       unit: "%",
-      percentSuffix: "%",
       icon: "💧",
       fileName: "image/humidity.png",
+      isSignificant: isSignificant(toNumber(data.humidity_percent_change)),
     },
     {
       title: "Pressure",
       subtitle: "Atmospheric shift",
       change: toNumber(data.pressure_change),
       percentChange: toNumber(data.pressure_percent_change),
+      currentValue: currentData?.pressure_hpa ?? null,
       unit: " hPa",
-      percentSuffix: "%",
       icon: "🌪️",
       fileName: "image/pressure.png",
+      isSignificant: isSignificant(toNumber(data.pressure_percent_change)),
     },
   ];
 

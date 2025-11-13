@@ -194,8 +194,8 @@
         </div>
 
         <div class="percent-section">
-          <div class="percent-label">Percent change</div>
-          <div class="percent-value" id="percentValue">+12.3%</div>
+          <div class="percent-label">Current reading</div>
+          <div class="percent-value" id="percentValue">28.9°C</div>
         </div>
       </div>
 
@@ -213,8 +213,9 @@
         icon: "🌡️",
         change: 2.5,
         percentChange: 12.3,
+        currentValue: 28.9,
         unit: "°C",
-        percentSuffix: "%",
+        isSignificant: true,
         timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
       };
 
@@ -225,12 +226,13 @@
         document.getElementById("icon").textContent = data.icon;
 
         const hasChange = data.change !== null && Number.isFinite(data.change);
-        const hasPercent =
-          data.percentChange !== null && Number.isFinite(data.percentChange);
+        const hasCurrentValue =
+          data.currentValue !== null && Number.isFinite(data.currentValue);
 
-        // If percent change is null, treat change as zero
-        const effectiveChange = hasPercent ? data.change : 0;
-        const effectiveHasChange = hasPercent ? hasChange : true;
+        // Use isSignificant to determine if change should be shown
+        const effectiveChange =
+          data.isSignificant && hasChange ? data.change : 0;
+        const effectiveHasChange = data.isSignificant ? hasChange : true;
 
         // Handle change section
         if (effectiveHasChange) {
@@ -255,20 +257,23 @@
           document.getElementById("changeValue").textContent = "No data";
         }
 
-        // Handle percent section with the new logic
-        if (hasPercent) {
-          // Normal case: show the percent change
-          const precision = Math.abs(data.percentChange) < 10 ? 2 : 1;
-          const prefix = data.percentChange > 0 ? "+" : "";
+        // Handle current value section
+        if (hasCurrentValue) {
+          // Show current value with appropriate precision
+          const precision =
+            data.unit === " hPa" ? 1 : Math.abs(data.currentValue) < 10 ? 1 : 0;
           document.getElementById(
             "percentValue"
-          ).textContent = `${prefix}${data.percentChange.toFixed(precision)}${
-            data.percentSuffix
-          }`;
+          ).textContent = `${data.currentValue.toFixed(precision)}${data.unit}`;
           card.classList.remove("no-change");
         } else {
-          // Percent is null: show "No change" and apply styling
-          document.getElementById("percentValue").textContent = "No change";
+          // No current value available
+          document.getElementById("percentValue").textContent = "No data";
+          card.classList.add("no-change");
+        }
+
+        // Apply no-change styling if change is not significant
+        if (!data.isSignificant) {
           card.classList.add("no-change");
         }
       }
