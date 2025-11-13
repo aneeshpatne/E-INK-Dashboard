@@ -1,5 +1,5 @@
 // fetch is used below; time helpers are not needed for alerts
-import { showAvg } from "./fetch_avg/traverse";
+import { showAvg } from "./fetch_avg/traverse.js";
 function createLegacyClockScreen({ helper, kindle }) {
   let isRunning = false;
   let isShuttingDown = false;
