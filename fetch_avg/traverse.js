@@ -49,16 +49,12 @@ async function showAvg() {
   try {
     console.log("Connecting to Kindle...");
     await connect();
-    console.log("Connected!");
-    await setRotation(0);
     const imageDir = join(process.cwd(), ".", "image");
     await traverseDirectory(imageDir);
-
     console.log("Done!");
   } catch (err) {
     console.error("Error:", err);
   } finally {
-    await setRotation(3);
     close();
   }
 }

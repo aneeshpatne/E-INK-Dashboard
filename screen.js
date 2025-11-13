@@ -19,7 +19,10 @@ function createLegacyClockScreen({ helper, kindle }) {
     try {
       await helper.setBacklight(24);
     } catch (e) {
-      console.error("Failed to change backlight on shutdown:", e.message || e);
+      console.error(
+        "Failed to change backlight on initializing mode change:",
+        e.message || e
+      );
     }
   }
 
