@@ -90,7 +90,6 @@ async function main() {
       try {
         await kindle.connect();
       } catch (_) {}
-      start;
       try {
         await browserMode.start();
         mode = "browser";
