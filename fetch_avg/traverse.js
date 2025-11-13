@@ -45,7 +45,7 @@ async function sendImage(base64) {
   }
 }
 
-async function main() {
+async function showAvg() {
   try {
     console.log("Connecting to Kindle...");
     await connect();
@@ -62,5 +62,4 @@ async function main() {
     close();
   }
 }
-
-main();
+export { showAvg };

@@ -1,5 +1,5 @@
 // fetch is used below; time helpers are not needed for alerts
-
+import { showAvg } from "./fetch_avg/traverse";
 function createLegacyClockScreen({ helper, kindle }) {
   let isRunning = false;
   let isShuttingDown = false;
@@ -23,12 +23,6 @@ function createLegacyClockScreen({ helper, kindle }) {
     }
   }
 
-  async function fetchAlert() {
-    const url = "http://192.168.1.100:3000/alert";
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-    return res.json();
-  }
   async function fetchNews() {
     const url = "http://192.168.1.100:3000/news_items";
     const res = await fetch(url);
@@ -103,9 +97,7 @@ function createLegacyClockScreen({ helper, kindle }) {
         console.log("[screen] News fetched:", JSON.stringify(newsJson));
         await paintNews(newsJson);
       } else {
-        const alertJson = await fetchAlert();
-        console.log("[screen] Alert fetched:", JSON.stringify(alertJson));
-        await paintAlert(alertJson);
+        await showAvg();
       }
     } catch (e) {
       console.error(
