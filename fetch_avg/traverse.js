@@ -50,7 +50,7 @@ async function main() {
     console.log("Connecting to Kindle...");
     await connect();
     console.log("Connected!");
-    await setRotation(3);
+    await setRotation(0);
     const imageDir = join(process.cwd(), ".", "image");
     await traverseDirectory(imageDir);
 
@@ -58,7 +58,7 @@ async function main() {
   } catch (err) {
     console.error("Error:", err);
   } finally {
-    await setRotation(0);
+    await setRotation(3);
     close();
   }
 }
